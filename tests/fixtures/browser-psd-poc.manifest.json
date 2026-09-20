@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "cli": {
+    "python": "D:\\proje2\\psd2code\\.venv\\Scripts\\python.exe",
+    "entry": "D:\\proje2\\psd2code\\psd_to_code.py",
+    "command": "pack <PSD_PATH> -o <OUTPUT_DIR> --scales 1"
+  },
+  "fixtures": [
+    {
+      "id": "marked-modal-45mb",
+      "sourcePath": "D:\\project\\校招宣讲\\校招报名页弹窗.psd",
+      "sourceBytes": 47468354,
+      "outputDirectory": "artifacts/v4-browser-psd-poc/marked-modal-45mb",
+      "runs": 1
+    },
+    {
+      "id": "resource-management-100mb",
+      "sourcePath": "D:\\project\\八周年活动 图片资源\\2026 国服周年数据盘点\\1-3 资源管理.psd",
+      "sourceBytes": 99073157,
+      "outputDirectory": "artifacts/v4-browser-psd-poc/resource-management-100mb",
+      "runs": 1
+    },
+    {
+      "id": "homepage-200mb",
+      "sourcePath": "D:\\project\\八周年活动 图片资源\\2026 国服周年数据盘点\\P1 首页.psd",
+      "sourceBytes": 195499172,
+      "outputDirectory": "artifacts/v4-browser-psd-poc/homepage-200mb",
+      "runs": 3
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "cli": {
+    "python": "D:\\proje2\\psd2code\\.venv\\Scripts\\python.exe",
+    "entry": "D:\\proje2\\psd2code\\psd_to_code.py",
+    "command": "pack <PSD_PATH> -o <OUTPUT_DIR> --scales 1"
+  },
+  "fixtures": [
+    {
+      "id": "normal-modal",
+      "category": "普通页面",
+      "sourcePath": "D:\\project\\校招宣讲\\校招报名页弹窗.psd",
+      "sourceBytes": 47468354,
+      "outputDirectory": "artifacts/v3-real-fixtures/normal-modal",
+      "expectation": {
+        "markers": ["-h-"],
+        "diagnostics": [],
+        "document": { "width": 750, "height": 2781 },
+        "nodes": 222,
+        "assets": 10,
+        "diagnosticsCount": 0
+      }
+    },
+    {
+      "id": "long-mobile-page",
+      "category": "超长移动端页面",
+      "sourcePath": "D:\\project\\校招宣讲\\校招报名页.psd",
+      "sourceBytes": 261380179,
+      "outputDirectory": "artifacts/v3-real-fixtures/long-mobile-page",
+      "expectation": {
+        "markers": ["-h-"],
+        "diagnostics": ["hidden_marked"],
+        "document": { "width": 750, "height": 4273 },
+        "nodes": 706,
+        "assets": 31,
+        "diagnosticsCount": 4
+      }
+    },
+    {
+      "id": "marked-assets",
+      "category": "含 -h- 标记资源页面",
+      "sourcePath": "D:\\project\\校招宣讲\\校招报名页-20025-h.psd",
+      "sourceBytes": 337940289,
+      "outputDirectory": "artifacts/v3-real-fixtures/marked-assets",
+      "expectation": {
+        "markers": ["-h-"],
+        "diagnostics": [],
+        "document": { "width": 750, "height": 3100 },
+        "nodes": 191,
+        "assets": 19,
+        "diagnosticsCount": 0,
+        "e2eAssetLayerId": "2303"
+      }
+    },
+    {
+      "id": "complex-app-intro",
+      "category": "含字体、效果、智能对象或诊断页面",
+      "sourcePath": "D:\\project\\校招宣讲\\0907-lcw更新-面试流程+游戏业务\\0907APP介绍.psd",
+      "sourceBytes": 13430214,
+      "outputDirectory": "artifacts/v3-real-fixtures/complex-app-intro",
+      "expectation": {
+        "markers": [],
+        "diagnostics": [],
+        "document": { "width": 1177, "height": 4203 },
+        "nodes": 99,
+        "assets": 0,
+        "diagnosticsCount": 0
+      }
+    }
+  ]
+}

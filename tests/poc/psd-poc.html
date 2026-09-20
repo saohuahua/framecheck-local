@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Framecheck PSD Worker POC</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; color: #1d1d1f; }
+      main { max-width: 680px; }
+      p { min-height: 24px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PSD Worker POC</h1>
+      <input id="psd-file" type="file" accept=".psd,application/octet-stream" />
+      <button id="cancel" type="button" disabled>取消</button>
+      <p id="status" data-status="idle">idle</p>
+      <output id="result"></output>
+    </main>
+    <script type="module" src="./psd-poc.ts"></script>
+  </body>
+</html>
