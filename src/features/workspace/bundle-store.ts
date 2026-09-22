@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { toLocalViewerPayload } from '../bundle/bundle-adapter'
-import { bundleRepository } from '../bundle/bundle-repository'
+import { bundleRepository, type BundleImportTask } from '../bundle/bundle-repository'
 import type {
   BundleImportProgress,
   LocalBundlePreferences,
@@ -30,7 +30,7 @@ export const useBundleStore = defineStore('bundle', () => {
   const records = ref<LocalBundleRecord[]>([])
   const importProgress = ref<BundleImportProgress>(initialProgress())
   const isInitialized = ref(false)
-  const currentTask = ref<ReturnType<typeof bundleRepository.createImportTask> | null>(null)
+  const currentTask = ref<BundleImportTask | null>(null)
   const activeLocalBundleId = computed(() => activeViewerSession.value?.localBundleId)
 
   async function initialize() {
@@ -55,6 +55,17 @@ export const useBundleStore = defineStore('bundle', () => {
     const task = bundleRepository.createImportTask(file, (progress) => {
       importProgress.value = progress
     })
+    return runImportTask(task)
+  }
+
+  async function importGenerated(jobId: string): Promise<LocalBundleRecord> {
+    const task = bundleRepository.createGeneratedImportTask(jobId, (progress) => {
+      importProgress.value = progress
+    })
+    return runImportTask(task)
+  }
+
+  async function runImportTask(task: BundleImportTask): Promise<LocalBundleRecord> {
     currentTask.value = task
 
     try {
@@ -191,6 +202,7 @@ export const useBundleStore = defineStore('bundle', () => {
     downloadAssets,
     exportBundle,
     importFile,
+    importGenerated,
     importProgress,
     initialize,
     isInitialized,

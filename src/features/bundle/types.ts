@@ -11,6 +11,10 @@ export const requiredArtifactPaths = [
 
 export type PersistedBundleStatus = 'ready' | 'partial'
 
+export type BundleProvenance =
+  | { type: 'browser-file' }
+  | { type: 'generated'; jobId: string }
+
 export type ImportStatus =
   | 'idle'
   | 'importing'
@@ -32,6 +36,7 @@ export interface LocalBundlePreferences {
 export interface LocalBundleRecord {
   localBundleId: string
   importedAt: string
+  provenance?: BundleProvenance
   archiveName: string
   archiveSize: number
   sourceSha256: string
@@ -79,6 +84,9 @@ export type BundleErrorCode =
   | 'cancelled'
   | 'unsupported-browser'
   | 'storage-failed'
+  | 'generated-bundle-unavailable'
+  | 'generated-bundle-not-found'
+  | 'generated-bundle-read-failed'
 
 export class BundleError extends Error {
   readonly code: BundleErrorCode

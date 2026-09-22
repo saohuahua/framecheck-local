@@ -1,7 +1,9 @@
 import type { ValidatedPortableBundle } from './schema'
+import type { GeneratedBundleReader } from './generated-bundle-reader'
 import {
   BundleError,
   type BundleImportProgress,
+  type BundleProvenance,
   type LocalBundleRecord,
   type PortableBundleSummary,
   type StoredBundleArtifacts,
@@ -37,11 +39,18 @@ export interface OpenedBundle {
   validated: ValidatedPortableBundle
 }
 
+export interface BundleModule {
+  importBrowserFile(file: File): Promise<LocalBundleRecord>
+  openGenerated(jobId: string): Promise<LocalBundleRecord>
+  open(localBundleId: string): Promise<OpenedBundle>
+}
+
 export interface BundleRepositoryDependencies {
   index: Pick<IndexedDbBundleIndex, 'delete' | 'findCacheHit' | 'get' | 'list' | 'put' | 'updateOpened' | 'updatePreferences'>
   storage: Pick<OpfsBundleStore, 'commitStaging' | 'deletePrefix' | 'isSupported' | 'listFiles' | 'readFile'>
   storageManager: Pick<StorageManager, 'ensureAvailable' | 'requestPersistence'>
   createImporter: () => BundleImporter
+  generatedBundleReader?: GeneratedBundleReader
   now: () => Date
   makeId: () => string
 }
@@ -66,10 +75,12 @@ function formatRecord(
   summary: PortableBundleSummary,
   localBundleId: string,
   importedAt: string,
+  provenance: BundleProvenance,
 ): LocalBundleRecord {
   return {
     localBundleId,
     importedAt,
+    provenance,
     archiveName: summary.archiveName,
     archiveSize: summary.archiveSize,
     sourceSha256: summary.sourceSha256,
@@ -89,11 +100,25 @@ function formatRecord(
   }
 }
 
-export class BundleRepository {
+function failureStatus(bundleError: BundleError): BundleImportProgress['status'] {
+  if (bundleError.code === 'cancelled') {
+    return 'cancelled'
+  }
+
+  if (bundleError.code === 'storage-full') {
+    return 'storage-full'
+  }
+
+  return 'failed'
+}
+
+export class BundleRepository implements BundleModule {
   private readonly dependencies: BundleRepositoryDependencies
+  private generatedBundleReader: GeneratedBundleReader | undefined
 
   constructor(dependencies: BundleRepositoryDependencies = defaultDependencies) {
     this.dependencies = dependencies
+    this.generatedBundleReader = dependencies.generatedBundleReader
   }
 
   async initialize(): Promise<void> {
@@ -104,9 +129,84 @@ export class BundleRepository {
     return this.dependencies.index.list()
   }
 
+  async importBrowserFile(file: File): Promise<LocalBundleRecord> {
+    return this.createImportTask(file, () => {}).promise
+  }
+
+  setGeneratedBundleReader(reader: GeneratedBundleReader | undefined): void {
+    this.generatedBundleReader = reader
+  }
+
   createImportTask(
     file: File,
     onProgress: (progress: BundleImportProgress) => void,
+  ): BundleImportTask {
+    return this.createFileImportTask(file, onProgress, { type: 'browser-file' })
+  }
+
+  async openGenerated(jobId: string): Promise<LocalBundleRecord> {
+    return this.createGeneratedImportTask(jobId, () => {}).promise
+  }
+
+  createGeneratedImportTask(
+    jobId: string,
+    onProgress: (progress: BundleImportProgress) => void,
+  ): BundleImportTask {
+    let cancelled = false
+    let importTask: BundleImportTask | undefined
+    let cancelRead: ((error: BundleError) => void) | undefined
+    const normalizedJobId = jobId.trim()
+
+    const cancel = () => {
+      cancelled = true
+      importTask?.cancel()
+      cancelRead?.(new BundleError('cancelled', '导入已取消'))
+    }
+
+    onProgress(importState('importing', { stage: 'checking', message: '读取桌面任务生成的 Bundle' }))
+    const cancelledRead = new Promise<File>((_resolve, reject) => {
+      cancelRead = reject
+    })
+    const promise = Promise.race([
+      this.readGeneratedBundle(normalizedJobId),
+      cancelledRead,
+    ])
+      .then((file) => {
+        if (cancelled) {
+          throw new BundleError('cancelled', '导入已取消')
+        }
+
+        importTask = this.createFileImportTask(file, onProgress, {
+          type: 'generated',
+          jobId: normalizedJobId,
+        })
+        if (cancelled) {
+          importTask.cancel()
+        }
+        return importTask.promise
+      })
+      .catch((error: unknown) => {
+        if (importTask) {
+          throw error
+        }
+
+        const bundleError = error instanceof BundleError
+          ? error
+          : new BundleError(
+              'generated-bundle-read-failed',
+              error instanceof Error ? error.message : '无法读取桌面任务生成的 Bundle',
+            )
+        onProgress(importState(failureStatus(bundleError), { message: bundleError.message }))
+        throw bundleError
+      })
+
+    return { promise, cancel }
+  }
+
+  private createFileImportTask(
+    file: File,
+    onProgress: (progress: BundleImportProgress) => void,
+    provenance: BundleProvenance,
   ): BundleImportTask {
     const importer = this.dependencies.createImporter()
     const jobId = this.dependencies.makeId()
@@ -118,7 +218,7 @@ export class BundleRepository {
       importer.cancel(jobId)
     }
 
-    const promise = this.import(file, importer, jobId, stagingPrefix, onProgress, () => cancelled)
+    const promise = this.import(file, importer, jobId, stagingPrefix, onProgress, () => cancelled, provenance)
     return { promise, cancel }
   }
 
@@ -202,6 +302,7 @@ export class BundleRepository {
     stagingPrefix: string,
     onProgress: (progress: BundleImportProgress) => void,
     isCancelled: () => boolean,
+    provenance: BundleProvenance,
   ): Promise<LocalBundleRecord> {
     let storagePrefix: string | undefined
     try {
@@ -232,7 +333,7 @@ export class BundleRepository {
       }
 
       const localBundleId = this.dependencies.makeId()
-      const record = formatRecord(summary, localBundleId, this.dependencies.now().toISOString())
+      const record = formatRecord(summary, localBundleId, this.dependencies.now().toISOString(), provenance)
       storagePrefix = record.storagePrefix
       await importer.extract(jobId, stagingPrefix, (progress) => {
         onProgress(importState('importing', progress))
@@ -262,12 +363,7 @@ export class BundleRepository {
       const bundleError = error instanceof BundleError
         ? error
         : new BundleError('storage-failed', error instanceof Error ? error.message : '本地导入失败')
-      const status = bundleError.code === 'cancelled'
-        ? 'cancelled'
-        : bundleError.code === 'storage-full'
-          ? 'storage-full'
-          : 'failed'
-      onProgress(importState(status, { message: bundleError.message }))
+      onProgress(importState(failureStatus(bundleError), { message: bundleError.message }))
       throw bundleError
     } finally {
       importer.terminate()
@@ -283,6 +379,34 @@ export class BundleRepository {
     return record
   }
 
+  private async readGeneratedBundle(jobId: string): Promise<File> {
+    if (!jobId) {
+      throw new BundleError('generated-bundle-not-found', '桌面任务不存在')
+    }
+
+    const reader = this.generatedBundleReader
+    if (!reader) {
+      throw new BundleError('generated-bundle-unavailable', '当前运行环境不能读取桌面任务生成的 Bundle')
+    }
+
+    try {
+      return await reader.read(jobId)
+    } catch (error) {
+      if (error instanceof BundleError) {
+        throw error
+      }
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new BundleError('cancelled', '导入已取消')
+      }
+
+      throw new BundleError(
+        'generated-bundle-read-failed',
+        error instanceof Error ? error.message : '无法读取桌面任务生成的 Bundle',
+      )
+    }
+  }
+
   private async isCacheUsable(record: LocalBundleRecord): Promise<boolean> {
     try {
       await this.dependencies.storage.readFile(record.storagePrefix, 'bundle.json')
@@ -296,3 +420,7 @@ export class BundleRepository {
 }
 
 export const bundleRepository = new BundleRepository()
+
+export function setGeneratedBundleReader(reader: GeneratedBundleReader | undefined): void {
+  bundleRepository.setGeneratedBundleReader(reader)
+}
