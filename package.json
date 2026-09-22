@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:check": "cargo check --manifest-path src-tauri/Cargo.toml",
     "typecheck": "vue-tsc --noEmit",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
@@ -15,6 +18,8 @@
     "analyze": "vue-tsc -b && vite build --mode analyze"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
     "@zip.js/zip.js": "^2.15.0",
     "dexie": "^4.4.6",
     "lucide-vue-next": "^0.577.0",
@@ -26,11 +31,12 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "ag-psd": "^31.0.2",
+    "@tauri-apps/cli": "^2.11.5",
     "@types/node": "^24.13.3",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/test-utils": "^2.5.0",
     "@vue/tsconfig": "^0.9.1",
+    "ag-psd": "^31.0.2",
     "jsdom": "^30.0.1",
     "rollup-plugin-visualizer": "^7.1.1",
     "typescript": "~6.0.2",
