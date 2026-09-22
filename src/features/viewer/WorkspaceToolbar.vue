@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Download, FolderOpen, HardDrive, Keyboard, MoreHorizontal, Search } from 'lucide-vue-next'
+import { Download, FolderOpen, HardDrive, Keyboard, MoreHorizontal, Search, Workflow } from 'lucide-vue-next'
 import AppCommandButton from '../../shared/ui/AppCommandButton.vue'
 import AppIconButton from '../../shared/ui/AppIconButton.vue'
 import AppMenu, { type AppMenuItem } from '../../shared/ui/AppMenu.vue'
@@ -16,6 +16,7 @@ const emit = defineEmits<{
   exportCurrent: []
   focusSearch: []
   openDemo: []
+  openConversion: []
   openImport: []
   showKeyboard: []
   showLocalData: []
@@ -58,6 +59,10 @@ function onMenuSelect(value: string) {
       <span class="workspace-toolbar__canvas fc-mono">{{ session.canvas.width }} x {{ session.canvas.height }} px</span>
     </template>
     <span class="workspace-toolbar__spacer" />
+    <AppCommandButton @click="emit('openConversion')">
+      <template #icon><Workflow :size="14" aria-hidden="true" /></template>
+      转换
+    </AppCommandButton>
     <AppCommandButton variant="primary" @click="emit('openImport')">
       <template #icon><FolderOpen :size="14" aria-hidden="true" /></template>
       导入

@@ -21,6 +21,10 @@ import { useViewerStore } from './viewer-store'
 
 type DialogKind = 'keyboard' | 'local-data' | null
 
+const emit = defineEmits<{
+  openConversion: []
+}>()
+
 const viewer = useViewerStore()
 const bundleStore = useBundleStore()
 const leftWidth = ref(264)
@@ -152,6 +156,7 @@ onBeforeUnmount(() => {
       @export-current="exportCurrent"
       @focus-search="focusLayerSearch"
       @open-demo="openDemo"
+      @open-conversion="emit('openConversion')"
       @open-import="importOpen = true"
       @show-keyboard="dialog = 'keyboard'"
       @show-local-data="dialog = 'local-data'"
