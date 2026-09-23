@@ -34,6 +34,8 @@ pub struct StartJobRequest {
     pub css_pretty_enabled: bool,
     pub smart_merge_enabled: bool,
     pub image_layer_flatten_enabled: bool,
+    /// 嵌套挖洞：true 时已标记后代从父级合成图挖出（交互元素独立成图）
+    pub nested_suppression_enabled: bool,
 }
 
 #[derive(Serialize)]
@@ -50,6 +52,7 @@ pub(crate) struct RunnerStartJobRequest<'a> {
     css_pretty_enabled: bool,
     smart_merge_enabled: bool,
     image_layer_flatten_enabled: bool,
+    nested_suppression_enabled: bool,
 }
 
 impl<'a> From<&'a StartJobRequest> for RunnerStartJobRequest<'a> {
@@ -66,6 +69,7 @@ impl<'a> From<&'a StartJobRequest> for RunnerStartJobRequest<'a> {
             css_pretty_enabled: request.css_pretty_enabled,
             smart_merge_enabled: request.smart_merge_enabled,
             image_layer_flatten_enabled: request.image_layer_flatten_enabled,
+            nested_suppression_enabled: request.nested_suppression_enabled,
         }
     }
 }
@@ -343,11 +347,13 @@ mod tests {
             css_pretty_enabled: true,
             smart_merge_enabled: true,
             image_layer_flatten_enabled: false,
+            nested_suppression_enabled: true,
         };
 
         let payload = serde_json::to_value(RunnerStartJobRequest::from(&request)).expect("runner payload");
 
         assert!(payload.get("bundleCompressed").is_none());
+        assert_eq!(payload.get("nestedSuppressionEnabled"), Some(&serde_json::Value::Bool(true)));
     }
 
     #[test]

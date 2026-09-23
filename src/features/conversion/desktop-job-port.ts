@@ -15,6 +15,8 @@ export interface StartJobRequest {
   cssPrettyEnabled: boolean
   smartMergeEnabled: boolean
   imageLayerFlattenEnabled: boolean
+  /** 嵌套挖洞：true 时已标记后代从父级合成图挖出（交互元素独立成图） */
+  nestedSuppressionEnabled: boolean
 }
 
 export interface DesktopArtifact {

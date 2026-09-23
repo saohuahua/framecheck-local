@@ -78,6 +78,7 @@ describe('ConversionWorkspace', () => {
     await wrapper.get('[data-testid="css-pretty"]').setValue(false)
     await wrapper.get('[data-testid="smart-merge"]').setValue(false)
     await wrapper.get('[data-testid="image-flatten"]').setValue(true)
+    await wrapper.get('[data-testid="nested-suppression"]').setValue(false)
     await wrapper.get('form').trigger('submit')
     await settle()
 
@@ -94,6 +95,7 @@ describe('ConversionWorkspace', () => {
       cssPrettyEnabled: false,
       smartMergeEnabled: false,
       imageLayerFlattenEnabled: true,
+      nestedSuppressionEnabled: false,
     }])
     expect(Object.keys(adapter.requests[0]).sort()).toEqual([
       'bundleCompressed',
@@ -101,6 +103,7 @@ describe('ConversionWorkspace', () => {
       'cssStyle',
       'deliverables',
       'imageLayerFlattenEnabled',
+      'nestedSuppressionEnabled',
       'outputDir',
       'protocolVersion',
       'scales',

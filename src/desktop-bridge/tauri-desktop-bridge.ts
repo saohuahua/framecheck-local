@@ -104,6 +104,7 @@ function parseRequest(value: unknown): StartJobRequest {
     cssPrettyEnabled: boolean(raw.cssPrettyEnabled, 'request.cssPrettyEnabled'),
     smartMergeEnabled: boolean(raw.smartMergeEnabled, 'request.smartMergeEnabled'),
     imageLayerFlattenEnabled: boolean(raw.imageLayerFlattenEnabled, 'request.imageLayerFlattenEnabled'),
+    nestedSuppressionEnabled: boolean(raw.nestedSuppressionEnabled, 'request.nestedSuppressionEnabled'),
   }
 }
 

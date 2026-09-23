@@ -875,6 +875,7 @@ mod tests {
             css_pretty_enabled: true,
             smart_merge_enabled: true,
             image_layer_flatten_enabled: false,
+            nested_suppression_enabled: true,
         }
     }
 

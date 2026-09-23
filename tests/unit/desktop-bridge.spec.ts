@@ -21,6 +21,7 @@ function request(taskId: string): StartJobRequest {
     cssPrettyEnabled: true,
     smartMergeEnabled: true,
     imageLayerFlattenEnabled: false,
+    nestedSuppressionEnabled: true,
   }
 }
 

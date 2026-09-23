@@ -56,6 +56,7 @@ const cssStyle = ref<'compact' | 'expanded'>('compact')
 const cssPrettyEnabled = ref(true)
 const smartMergeEnabled = ref(true)
 const imageLayerFlattenEnabled = ref(false)
+const nestedSuppressionEnabled = ref(true)
 const validationErrors = ref<Record<string, string>>({})
 const localError = ref<string | undefined>()
 const recentError = ref<string | undefined>()
@@ -213,6 +214,7 @@ function buildRequest(): StartJobRequest | undefined {
     cssPrettyEnabled: cssPrettyEnabled.value,
     smartMergeEnabled: smartMergeEnabled.value,
     imageLayerFlattenEnabled: imageLayerFlattenEnabled.value,
+    nestedSuppressionEnabled: nestedSuppressionEnabled.value,
   }
 }
 
@@ -522,6 +524,7 @@ onBeforeUnmount(() => {
             <label><input v-model="cssPrettyEnabled" data-testid="css-pretty" type="checkbox" /> 格式化 CSS</label>
             <label><input v-model="smartMergeEnabled" data-testid="smart-merge" type="checkbox" /> 智能合并</label>
             <label><input v-model="imageLayerFlattenEnabled" data-testid="image-flatten" type="checkbox" /> 图像图层扁平化</label>
+            <label><input v-model="nestedSuppressionEnabled" data-testid="nested-suppression" type="checkbox" /> 嵌套挖洞</label>
           </div>
         </fieldset>
 
