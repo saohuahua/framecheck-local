@@ -10,6 +10,9 @@ import {
   type DesktopJobModule,
   type DesktopOutputDirectoryOpener,
   type DesktopJobStatus,
+  type DesktopVueExportProjectWriter,
+  type DesktopVueExportTargetChooser,
+  type DesktopVueExportWriteFile,
   type GeneratedBundleReader,
   type StartJobRequest,
 } from './types'
@@ -305,6 +308,45 @@ export class TauriGeneratedBundleReader implements GeneratedBundleReader {
       return byte
     })
     return new File([new Uint8Array(bytes)], name, { type: 'application/zip' })
+  }
+}
+
+/** 目标项目文本文件读取：null 表示文件不存在 */
+function parseOptionalText(value: unknown, label: string): string | null {
+  if (value === null) {
+    return null
+  }
+  return string(value, label)
+}
+
+export class TauriVueExportProjectWriter implements DesktopVueExportProjectWriter {
+  async readTextFile(projectRoot: string, path: string): Promise<string | null> {
+    return parseOptionalText(
+      await invokeNative('vue_export_read_text_file', { projectRoot, path }),
+      'vue export read response',
+    )
+  }
+
+  async filterExisting(projectRoot: string, paths: string[]): Promise<string[]> {
+    const response = array(await invokeNative('vue_export_check_existing', { projectRoot, paths }), 'vue export existing')
+    return response.map((value) => string(value, 'vue export existing.path'))
+  }
+
+  async writeFiles(projectRoot: string, files: DesktopVueExportWriteFile[]): Promise<void> {
+    await invokeNative('vue_export_write_files', { projectRoot, files })
+  }
+}
+
+export class TauriVueExportTargetChooser implements DesktopVueExportTargetChooser {
+  async chooseProjectRoot(): Promise<string | undefined> {
+    requireTauriRuntime()
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const selected = await open({
+      title: '选择 h5-template 项目根目录',
+      directory: true,
+      multiple: false,
+    })
+    return typeof selected === 'string' ? selected : undefined
   }
 }
 
