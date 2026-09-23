@@ -1,6 +1,7 @@
 mod artifacts;
 mod jobs;
 mod runner;
+mod vue_export;
 
 use std::{path::Path, process::Command};
 
@@ -10,6 +11,9 @@ use jobs::{
 };
 use runner::{RunnerConfig, StartJobRequest};
 use tauri::{AppHandle, State};
+use vue_export::{
+    vue_export_check_existing, vue_export_read_text_file, vue_export_write_files,
+};
 
 #[tauri::command]
 async fn start_job(
@@ -112,7 +116,10 @@ pub fn run() {
             get_job,
             list_recent,
             read_generated_bundle,
-            open_output_directory
+            open_output_directory,
+            vue_export_read_text_file,
+            vue_export_check_existing,
+            vue_export_write_files
         ])
         .run(tauri::generate_context!())
         .expect("Framecheck desktop application failed")
