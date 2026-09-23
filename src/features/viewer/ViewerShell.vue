@@ -7,6 +7,9 @@ import AppPanelResize from '../../shared/ui/AppPanelResize.vue'
 import AppScrollArea from '../../shared/ui/AppScrollArea.vue'
 import AppTabs, { type AppTab } from '../../shared/ui/AppTabs.vue'
 import BundleImportDialog from '../importer/BundleImportDialog.vue'
+import { bundleRepository } from '../bundle/bundle-repository'
+import type { VueExportBundleAccess, VueExportPort } from '../codegen/vue-export-port'
+import VueExportDialog from '../codegen/VueExportDialog.vue'
 import type { LocalBundleRecord } from '../bundle/types'
 import BundleList from '../workspace/BundleList.vue'
 import { activeViewerSession } from '../workspace/bundle-session'
@@ -21,6 +24,11 @@ import { useViewerStore } from './viewer-store'
 
 type DialogKind = 'keyboard' | 'local-data' | null
 
+const props = defineProps<{
+  /** Vue 静态页导出能力（桌面端注入；浏览器端按钮置灰） */
+  vueExportPort?: VueExportPort
+}>()
+
 const emit = defineEmits<{
   openConversion: []
 }>()
@@ -31,6 +39,7 @@ const leftWidth = ref(264)
 const rightWidth = ref(344)
 const dialog = ref<DialogKind>(null)
 const importOpen = ref(false)
+const vueExportOpen = ref(false)
 const deleteTarget = ref<LocalBundleRecord | null>(null)
 const developmentList = ref<{ focusSearch: () => void } | null>(null)
 const session = computed(() => activeViewerSession.value)
@@ -108,6 +117,33 @@ async function exportCurrent() {
   }
 }
 
+/**
+ * Vue 导出对话框的数据访问：从当前打开的本地 Bundle 读取设计事实与切图字节。
+ * 对话框通过 props 注入这份实现，测试时可替换为内存假实现。
+ */
+const vueExportAccess: VueExportBundleAccess = {
+  async loadFacts() {
+    const localBundleId = session.value?.localBundleId
+    if (!localBundleId) {
+      throw new Error('当前没有打开本地 Bundle，请先导入再导出 Vue 页面')
+    }
+    const opened = await bundleRepository.open(localBundleId)
+    return { design: opened.validated.design, assets: opened.validated.assets }
+  },
+  async readAssetBytes(sourcePath) {
+    const localBundleId = session.value?.localBundleId
+    if (!localBundleId) {
+      return undefined
+    }
+    try {
+      const file = await bundleRepository.readArtifact(localBundleId, sourcePath)
+      return new Uint8Array(await file.arrayBuffer())
+    } catch {
+      return undefined
+    }
+  },
+}
+
 function setDialogOpen(open: boolean) {
   if (!open) {
     dialog.value = null
@@ -152,8 +188,10 @@ onBeforeUnmount(() => {
   <div class="viewer-shell">
     <WorkspaceToolbar
       :session="session"
+      :can-export-vue="Boolean(props.vueExportPort)"
       @close-viewer="closeViewer"
       @export-current="exportCurrent"
+      @export-vue="vueExportOpen = true"
       @focus-search="focusLayerSearch"
       @open-demo="openDemo"
       @open-conversion="emit('openConversion')"
@@ -229,6 +267,14 @@ onBeforeUnmount(() => {
     </footer>
 
     <BundleImportDialog v-model:open="importOpen" />
+
+    <VueExportDialog
+      v-model:open="vueExportOpen"
+      :port="props.vueExportPort"
+      :access="vueExportAccess"
+      :reference-url="session?.referenceUrl"
+      :source-name="session?.sourceName"
+    />
 
     <AppDialog
       v-if="activeDialog"

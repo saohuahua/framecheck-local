@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Download, FolderOpen, HardDrive, Keyboard, MoreHorizontal, Search, Workflow } from 'lucide-vue-next'
+import { Download, FileCode2, FolderOpen, HardDrive, Keyboard, MoreHorizontal, Search, Workflow } from 'lucide-vue-next'
 import AppCommandButton from '../../shared/ui/AppCommandButton.vue'
 import AppIconButton from '../../shared/ui/AppIconButton.vue'
 import AppMenu, { type AppMenuItem } from '../../shared/ui/AppMenu.vue'
 import AppTooltip from '../../shared/ui/AppTooltip.vue'
 import type { ViewerBundleSession } from '../workspace/bundle-session'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   session: ViewerBundleSession | null
-}>()
+  /** 桌面端才具备写入目标项目的能力 */
+  canExportVue?: boolean
+}>(), {
+  canExportVue: false,
+})
 
 const emit = defineEmits<{
   closeViewer: []
   exportCurrent: []
+  exportVue: []
   focusSearch: []
   openDemo: []
   openConversion: []
@@ -27,6 +32,17 @@ const menuItems = computed<AppMenuItem[]>(() => [
   { value: 'close-viewer', label: '关闭当前稿', disabled: !props.session },
   { value: 'local-data', label: '关于本地数据' },
 ])
+
+/** Vue 导出按钮的禁用原因与提示文案 */
+const vueExportTooltip = computed(() => {
+  if (props.session?.kind !== 'local') {
+    return '打开本地 Bundle 后可导出 Vue 页面'
+  }
+  if (!props.canExportVue) {
+    return '写入目标项目需要桌面端打开'
+  }
+  return '把当前设计稿生成为 h5-template 静态页面'
+})
 
 function onMenuSelect(value: string) {
   if (value === 'open-demo') {
@@ -63,6 +79,20 @@ function onMenuSelect(value: string) {
       <template #icon><Workflow :size="14" aria-hidden="true" /></template>
       转换
     </AppCommandButton>
+    <AppTooltip :label="vueExportTooltip">
+      <template #trigger>
+        <span>
+          <AppCommandButton
+            data-testid="export-vue"
+            :disabled="session?.kind !== 'local' || !canExportVue"
+            @click="emit('exportVue')"
+          >
+            <template #icon><FileCode2 :size="14" aria-hidden="true" /></template>
+            Vue
+          </AppCommandButton>
+        </span>
+      </template>
+    </AppTooltip>
     <AppCommandButton variant="primary" @click="emit('openImport')">
       <template #icon><FolderOpen :size="14" aria-hidden="true" /></template>
       导入
