@@ -213,12 +213,18 @@ impl RunnerConfig {
                 .map_err(|_| RunnerConfigError::ResourceDirectory)?;
             let executable = resource_dir
                 .join("psd2code-runtime")
-                .join("psd2code-runner.exe");
+                .join(Self::runner_file_name());
             if !executable.is_file() {
                 return Err(RunnerConfigError::MissingExecutable);
             }
             Ok(Self { executable })
         }
+    }
+
+    /// PyInstaller 产物在 macOS/Linux 上没有 .exe 后缀
+    #[cfg(not(debug_assertions))]
+    fn runner_file_name() -> &'static str {
+        if cfg!(windows) { "psd2code-runner.exe" } else { "psd2code-runner" }
     }
 
     #[cfg(debug_assertions)]

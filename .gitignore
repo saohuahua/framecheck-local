@@ -28,3 +28,6 @@ tests/.tmp/
 *.njsproj
 *.sln
 *.sw?
+
+# 内嵌的 psd2code 冻结运行时（178MB 构建产物，来自 psd2code 仓 packaging/psd2code.spec）
+psd2code-runtime/
