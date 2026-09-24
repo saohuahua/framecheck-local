@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { CSSProperties } from 'vue'
 import { h5TemplateProfile } from './profile'
 import type { VueExportPreviewElement, VueExportPreviewModel } from './types'
 
@@ -57,7 +58,7 @@ async function loadImages(model: VueExportPreviewModel) {
   }
 }
 
-function frameStyle(frame: { x: number; y: number; width: number; height: number }) {
+function frameStyle(frame: { x: number; y: number; width: number; height: number }): CSSProperties {
   return {
     position: 'absolute',
     top: `${frame.y}px`,
@@ -67,7 +68,7 @@ function frameStyle(frame: { x: number; y: number; width: number; height: number
   }
 }
 
-function textStyle(element: Extract<VueExportPreviewElement, { type: 'text' }>) {
+function textStyle(element: Extract<VueExportPreviewElement, { type: 'text' }>): CSSProperties {
   return {
     position: 'absolute',
     top: `${element.bounds.y}px`,

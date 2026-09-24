@@ -280,7 +280,8 @@ function toBase64(bytes: Uint8Array): string {
  */
 async function resolvePreviewImage(sourcePath: string): Promise<string | undefined> {
   const bytes = await props.access.readAssetBytes(sourcePath)
-  return bytes ? URL.createObjectURL(new Blob([bytes])) : undefined
+  // 拷贝成 ArrayBuffer 支撑的数组：BlobPart 在 TS 泛型化 Uint8Array 后要求 ArrayBuffer 视图
+  return bytes ? URL.createObjectURL(new Blob([new Uint8Array(bytes)])) : undefined
 }
 
 /** 写入目标项目：复检冲突 → 读取切图字节 → 拼装并落盘，分步展示进度 */
